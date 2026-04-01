@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { fetchNotes, deleteNote } from "@/lib/api";
+import { fetchNotes } from "@/lib/api";
 import css from "./NotesPage.module.css";
 import NoteList from "@/components/NoteList/NoteList";
-import {
-  keepPreviousData,
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import { useDebouncedCallback } from "use-debounce";
@@ -24,25 +19,12 @@ function NotesClient({ tag }: Props) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [query, setQuery] = useState<string>("");
 
-  const queryClient = useQueryClient();
-
   const { data } = useQuery({
     queryKey: ["notes", currentPage, query, tag],
     queryFn: () => fetchNotes(query, currentPage, tag),
     placeholderData: keepPreviousData,
     refetchOnMount: false,
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
-  };
 
   const handleQueryChange = useDebouncedCallback((value: string) => {
     setQuery(value);
@@ -55,6 +37,7 @@ function NotesClient({ tag }: Props) {
     <div className={css.app}>
       <header className={css.toolbar}>
         <SearchBox value={query} onChange={handleQueryChange} />
+
         {totalPages > 1 && (
           <Pagination
             totalPages={totalPages}
@@ -62,13 +45,13 @@ function NotesClient({ tag }: Props) {
             setCurrentPage={setCurrentPage}
           />
         )}
-        <Link className={css.button} href={"/notes/action/create"}>
+
+        <Link className={css.button} href="/notes/action/create">
           Create note +
         </Link>
       </header>
-      {data?.notes && data.notes.length > 0 && (
-        <NoteList notes={data.notes} onDelete={handleDelete} />
-      )}
+
+      {data?.notes && data.notes.length > 0 && <NoteList notes={data.notes} />}
     </div>
   );
 }
