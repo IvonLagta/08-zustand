@@ -10,6 +10,15 @@ export const metadata: Metadata = {
     title: "Create Note | Note Hub",
     description:
       "Create a new note in Note Hub. Add title, content and tags to keep your thoughts organized.",
+    url: "https://notehub.com/notes/action/create",
+    images: [
+      {
+        url: "https://notehub.com/og-images/create-note.jpg",
+        alt: "Create a new note in Note Hub",
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
 };
 

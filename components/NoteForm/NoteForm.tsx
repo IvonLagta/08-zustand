@@ -1,9 +1,9 @@
 "use client";
-
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { createNote } from "@/lib/api";
 import { useNoteDraftStore } from "../../lib/store/noteStore";
 import css from "./NoteForm.module.css";
@@ -20,7 +20,6 @@ const validationSchema = Yup.object({
 export default function NoteForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
-
   const { draft, setDraft, clearDraft } = useNoteDraftStore();
 
   const mutation = useMutation({
@@ -39,10 +38,6 @@ export default function NoteForm() {
     mutation.mutate(values);
   };
 
-  const handleChange = (values: CreateNoteValues) => {
-    setDraft(values);
-  };
-
   return (
     <Formik
       initialValues={draft}
@@ -50,7 +45,9 @@ export default function NoteForm() {
       onSubmit={handleSubmit}
       enableReinitialize>
       {({ values }) => {
-        handleChange(values);
+        useEffect(() => {
+          setDraft(values);
+        }, [values, setDraft]);
 
         return (
           <Form className={css.form}>
@@ -107,7 +104,6 @@ export default function NoteForm() {
                 }}>
                 Cancel
               </button>
-
               <button
                 type="submit"
                 className={css.submitButton}
