@@ -2,16 +2,15 @@
 
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import css from "./NoteForm.module.css";
-import { NoteTag, CreateNoteValues } from "../../types/note";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createNote } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { createNote } from "@/lib/api";
 import { useNoteDraftStore } from "../../lib/store/noteStore";
+import css from "./NoteForm.module.css";
+import { CreateNoteValues } from "@/types/note";
 
 const validationSchema = Yup.object({
-  title: Yup.string().min(3).max(50).required("Title is required"),
+  title: Yup.string().min(3).max(50).required(),
   content: Yup.string().max(500),
   tag: Yup.string()
     .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
@@ -24,11 +23,11 @@ export default function NoteForm() {
 
   const { draft, setDraft, clearDraft } = useNoteDraftStore();
 
-  const createMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: createNote,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
       clearDraft();
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       router.push("/notes/filter/all");
     },
     onError: (error) => {
@@ -36,24 +35,22 @@ export default function NoteForm() {
     },
   });
 
-  const handleSubmit = async (values: CreateNoteValues) => {
-    await createMutation.mutateAsync(values);
+  const handleSubmit = (values: CreateNoteValues) => {
+    mutation.mutate(values);
   };
 
-  const handleFormChange = (values: CreateNoteValues) => {
+  const handleChange = (values: CreateNoteValues) => {
     setDraft(values);
   };
 
   return (
     <Formik
       initialValues={draft}
-      enableReinitialize
       validationSchema={validationSchema}
-      onSubmit={handleSubmit}>
-      {({ values, isSubmitting }) => {
-        useEffect(() => {
-          handleFormChange(values);
-        }, [values]);
+      onSubmit={handleSubmit}
+      enableReinitialize>
+      {({ values }) => {
+        handleChange(values);
 
         return (
           <Form className={css.form}>
@@ -104,14 +101,18 @@ export default function NoteForm() {
               <button
                 type="button"
                 className={css.cancelButton}
-                onClick={() => router.push("/notes/filter/all")}>
+                onClick={() => {
+                  clearDraft();
+                  router.push("/notes/filter/all");
+                }}>
                 Cancel
               </button>
+
               <button
                 type="submit"
                 className={css.submitButton}
-                disabled={isSubmitting || createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create note"}
+                disabled={mutation.isPending}>
+                {mutation.isPending ? "Creating..." : "Create note"}
               </button>
             </div>
           </Form>
